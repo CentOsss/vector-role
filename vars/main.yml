@@ -1,20 +1,27 @@
 ---
+vector_config_path: /etc/vector/vector.yaml
 vector_config:
   sources:
-    log:
+    internal_logs:
+      type: internal_logs
+    local_logs:
       type: file
-      ignore_older_secs: 600
       include:
         - /var/log/**/*.log
       read_from: beginning
   sinks:
-    clickhouse:
+    local_to_clickhouse:
       type: clickhouse
       inputs:
-        - log
+        - local_logs
       database: logs
-      endpoint: http://51.250.75.6:8123
-      table: my_table
+      endpoint: http://{{ clickhouse_host }}:8123
+      table: vector_internal_logs
+      auth:
+        user: "{{ clickhouse_user }}"
+        password: "{{ clickhouse_password }}"
+        strategy: basic
       compression: gzip
       healthcheck: false
       skip_unknown_fields: true
+      
